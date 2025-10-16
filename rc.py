@@ -2,7 +2,10 @@ import os
 import time
 import sys
 import io
-import CBalance
+#try:
+  #  import CBalance
+#xcept:
+  #  None
 def bianma(encoding):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding=encoding) #改变标准输出的默认编码
 
