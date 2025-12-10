@@ -64,8 +64,6 @@ def make(path):
 
 
 class cys(object):
-    """这个cys函数能够帮助变量名A中的变量a作为变量名B生成
-    并赋值b"""
 
     def vv(self, b):
 
@@ -110,4 +108,4 @@ def download(args):
     return os.system('pip install '+args)
 
 if __name__=="__main__":
-    print(download('yt-dlp'))
+    print(now())
