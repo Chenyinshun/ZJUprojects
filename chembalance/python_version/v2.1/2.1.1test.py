@@ -15,6 +15,7 @@ from PyQt5.QtCore import QRegExp  # 正则表达式
 from PyQt5 import QtCore  # Qt核心模块
 import sys  # 系统相关操作
 import sympy as sp  # 符号计算库，用于求解方程
+import time  # 时间相关
 import sympy.simplify.simplify  # sympy简化模块
 import math  # 数学运算
 
@@ -23,28 +24,35 @@ l1 = []  # 存储反应物列表
 l2 = []  # 存储生成物列表
 
 # 定义化学方程式中可能用到的系数符号（最多支持20个物质）
-a = sp.Symbol('a')  # 第1个系数
-b = sp.Symbol('b')  # 第2个系数
-c = sp.Symbol('c')  # 第3个系数
-d = sp.Symbol('d')  # 第4个系数
-e = sp.Symbol('e')  # 第5个系数
-f = sp.Symbol('f')  # 第6个系数
-g = sp.Symbol('g')  # 第7个系数
-h = sp.Symbol('h')  # 第8个系数
-i = sp.Symbol('i')  # 第9个系数
-j = sp.Symbol('j')  # 第10个系数
-k = sp.Symbol('k')  # 第11个系数
-l = sp.Symbol('l')  # 第12个系数
-m = sp.Symbol('m')  # 第13个系数
-n = sp.Symbol('n')  # 第14个系数
-o = sp.Symbol('o')  # 第15个系数
-p = sp.Symbol('p')  # 第16个系数
-q = sp.Symbol('q')  # 第17个系数
-r = sp.Symbol('r')  # 第18个系数
-s = sp.Symbol('s')  # 第19个系数
-t = sp.Symbol('t')  # 第20个系数
+# 这些符号将被用于构建方程组
+symbols_dict = {
+    'a': sp.Symbol('a'),  # 第1个系数
+    'b': sp.Symbol('b'),  # 第2个系数
+    'c': sp.Symbol('c'),  # 第3个系数
+    'd': sp.Symbol('d'),  # 第4个系数
+    'e': sp.Symbol('e'),  # 第5个系数
+    'f': sp.Symbol('f'),  # 第6个系数
+    'g': sp.Symbol('g'),  # 第7个系数
+    'h': sp.Symbol('h'),  # 第8个系数
+    'i': sp.Symbol('i'),  # 第9个系数
+    'j': sp.Symbol('j'),  # 第10个系数
+    'k': sp.Symbol('k'),  # 第11个系数
+    'l': sp.Symbol('l'),  # 第12个系数
+    'm': sp.Symbol('m'),  # 第13个系数
+    'n': sp.Symbol('n'),  # 第14个系数
+    'o': sp.Symbol('o'),  # 第15个系数
+    'p': sp.Symbol('p'),  # 第16个系数
+    'q': sp.Symbol('q'),  # 第17个系数
+    'r': sp.Symbol('r'),  # 第18个系数
+    's': sp.Symbol('s'),  # 第19个系数
+    't': sp.Symbol('t')  # 第20个系数
+}
+
+# 符号列表，按顺序排列
+ert = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't']
 
 
+# 原有函数定义保持不变...
 def fangfa(HXS):
     """
     分析化学式中的括号匹配情况
@@ -401,44 +409,46 @@ def Func(yueshu, leng, newlist, beginnum, endnum, ert, allelement1):
     返回:
         list: 解得的系数列表
     """
-    if yueshu == None:
+    if yueshu is None:
         yueshu = 1
 
-    tyu = ''  # 用于构建方程组字符串
+    # 获取符号对象列表
+    symbols = [symbols_dict[s] for s in ert[:beginnum + endnum]]
+
+    equations = []  # 存储所有方程
+
     # 构建每个元素的原子守恒方程
-    for i in range(1, leng + 1, 1):
-        begin = 'equ' + str(i) + '='  # 方程变量名
-        k = newlist[i - 1]  # 元素名
-        last = ''  # 系数符号字符串
+    for i in range(leng):
+        equation = 0
+        element_name = newlist[i]
 
-        # 构建方程：反应物系数×原子数 = 生成物系数×原子数
-        for t in range(0, beginnum + endnum, 1):
-            try:
-                begin = begin + '+' + ert[t] + '*' + str(allelement1[t][k])
-                last = last + ',' + ert[t]
-            except:
-                begin = begin + '+' + ert[t] + '*' + str(0)
-                last = last + ',' + ert[t]
+        # 对于每个物质，计算其对该元素原子数的贡献
+        for t in range(beginnum + endnum):
+            # 获取该物质中该元素的原子数，如果不存在则为0
+            atom_count = allelement1[t].get(element_name, 0)
+            equation += symbols[t] * atom_count
 
-        # 动态执行方程定义
-        exec(begin, globals())
-        tyu = tyu + ',' + 'equ' + str(i)
-
-        if i == 1:
-            last2 = last[1:]  # 去掉第一个逗号
+        # 添加到方程列表
+        equations.append(sp.Eq(equation, 0))
 
     # 添加约束方程（使第一个系数为指定值）
-    begin = 'equ' + str(leng + 1) + '= a - ' + str(yueshu)
-    exec(begin, globals())
-    tyu = tyu + ',' + 'equ' + str(leng + 1)
+    equations.append(sp.Eq(symbols[0], yueshu))
 
     # 求解方程组
-    exec('solution=sp.solve([' + tyu[1:] + '],[' + last2 + '])', globals())
+    try:
+        solution = sp.solve(equations, symbols)
+    except Exception as e:
+        # 如果求解失败，返回空列表
+        print(f"求解方程时出错: {e}")
+        return []
 
-    # 提取解
+    # 按ert列表的顺序提取解
     atlast = []
-    for i in solution.values():
-        atlast.append(i)
+    for symbol in symbols:
+        if symbol in solution:
+            atlast.append(solution[symbol])
+        else:
+            atlast.append(0)  # 如果没有解，设为0
 
     return atlast
 
@@ -465,9 +475,6 @@ def run(stringwhat):
         endnum = len(l2)  # 生成物数量
     except IndexError:
         return 'IndexError:请确保你输入了能配平的玩意'
-
-    # 系数符号列表
-    ert = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't']
 
     # 提取所有元素
     list = []
@@ -503,9 +510,6 @@ def run(stringwhat):
     # 第二次求解（得到整数解）
     atlast = Func(yueshu=yueshu, leng=leng, newlist=newlist, beginnum=beginnum, endnum=endnum, ert=ert,
                   allelement1=allelement1)
-
-    atlast2 = []
-    atlast.append(ert[len(atlast)])  # 添加最后一个系数符号
 
     # 构建配平后的方程式字符串
     fanyinwu = ''  # 反应物部分
@@ -580,10 +584,15 @@ class QTextEditDemo(QWidget):
             self.textEdit.setFontFamily('微软雅黑')
         else:
             # 获取输入的方程式并进行配平
-            a = run(self.textEdit.toPlainText())
-            self.textEdit.setFontPointSize(16)
-            self.textEdit.setText(a)  # 显示配平结果
-            self.textEdit.setFontFamily('微软雅黑')
+            try:
+                a = run(self.textEdit.toPlainText())
+                self.textEdit.setFontPointSize(16)
+                self.textEdit.setText(a)  # 显示配平结果
+                self.textEdit.setFontFamily('微软雅黑')
+            except Exception as e:
+                self.textEdit.setFontPointSize(16)
+                self.textEdit.setText(f'Error: {str(e)}')  # 显示错误信息
+                self.textEdit.setFontFamily('微软雅黑')
 
     def onClick_ButtonToHTML(self):
         """

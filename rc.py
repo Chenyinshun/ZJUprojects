@@ -2,10 +2,11 @@ import os
 import time
 import sys
 import io
-#try:
-  #  import CBalance
-#xcept:
-  #  None
+
+#from pandas.io.common import file_path_to_url
+
+
+#import CBalance
 def bianma(encoding):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer,encoding=encoding) #改变标准输出的默认编码
 
@@ -26,27 +27,54 @@ def printk(self, number):
         print(d, end='')
     pass
 
-
-def ctime(path):
-    w = os.path.getctime(path)
-    b = time.localtime(w)
-    return time.strftime('%Y %m %d %H:%M:%S', b)
-    pass
+class timef:
 
 
-def mtime(path):
-    w = os.path.getmtime(path)
-    b = time.localtime(w)
-    c = time.strftime('%Y %m %d %H:%M:%S', b)
-    return c
-    pass
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def now():
+        return time.strftime('%Y-%m-%d %H:%M:%S')
+
+    @staticmethod
+    def create_time(path):
+        """创建（属性修改）时间"""
+        w = os.path.getctime(path)
+        b = time.localtime(w)
+        return time.strftime('%Y-%m-%d %H:%M:%S', b)
+
+    @staticmethod
+    def edit_time(path):
+
+        """修改时间"""
+        w = os.path.getmtime(path)
+        b = time.localtime(w)
+        c = time.strftime('%Y-%m-%d %H:%M:%S', b)
+        return c
+
+    @staticmethod
+    def access_time(path):
+        """访问时间"""
+        w = os.path.getatime(path)
+        b = time.localtime(w)
+        return time.strftime('%Y-%m-%d %H:%M:%S', b)
 
 
-def atime(path):
-    w = os.path.getatime(path)
-    b = time.localtime(w)
-    return time.strftime('%Y %m %d %H:%M:%S', b)
-    pass
+
+def format_size(size_in_bytes):
+    """将字节数转换为人类可读的格式"""
+    for unit in ['B','KB','MB','GB','TB']:
+        if size_in_bytes < 1024:
+            return f"{size_in_bytes:.2f} {unit}"
+        size_in_bytes /= 1024
+    return f"{size_in_bytes:.2f} PB"
+
+def get_and_format_file_size(file_path):
+    """获取并格式化文件大小"""
+    file_size = os.path.getsize(file_path)
+    formatted_size = format_size(file_size)
+    return formatted_size
 
 
 def copy(patha, pathb):
@@ -55,35 +83,13 @@ def copy(patha, pathb):
         return 'success'
     else:
         return 'fail'
-    pass
+
 
 
 def make(path):
     if not os.path.exists(path):
         os.mkdir(path)
 
-
-class cys(object):
-
-    def vv(self, b):
-
-        return self + '=' + "'" + b + "'"
-        pass
-
-    def ll(self):
-        c = ''
-        for i in self:
-            c = c + i + '=[];'
-        return c
-
-        pass
-
-    def lv(self):
-        c = ''
-        for i in self:
-            c = c + i + '=None;'
-        return c
-        pass
 
 def hebin(list:list):
     newlist=[]
@@ -96,16 +102,16 @@ def hebin(list:list):
 
 def zuidagongyshu(p,q):
     temp=p%q
-    while (temp!=0):
+    while temp!=0:
         p=q
         q=temp
         temp=p%q
     return q
 
 def download(args):
-    import pip
+    #import pip
     import os
     return os.system('pip install '+args)
 
 if __name__=="__main__":
-    print(now())
+    print(timef.now())
